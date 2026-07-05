@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>✨ Neon Tic‑Tac‑Toe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0d0f1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      padding: 16px;
+      margin: 0;
+    }
+    .container {
+      max-width: 480px;
+      width: 100%;
+      background: #141824;
+      border-radius: 40px;
+      padding: 24px 20px 30px;
+      box-shadow: 0 20px 60px rgba(0, 20, 80, 0.6);
+      border: 1px solid #2a3a6a;
+      position: relative;
+    }
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #7fc9ff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px #4f7aff44;
+      letter-spacing: -1px;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+    .controls button {
+      background: #1e2844;
+      border: 1px solid #3a4a7a;
+      color: #b0ccff;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .controls button:active {
+      transform: scale(0.92);
+    }
+    .controls button.active {
+      background: #4f7aff;
+      color: #fff;
+      border-color: #7fc9ff;
+      box-shadow: 0 0 20px #4f7aff66;
+    }
+
+    /* Score & Turn */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0b0e16;
+      padding: 10px 18px;
+      border-radius: 60px;
+      margin-bottom: 20px;
+      border: 1px solid #2a3a5a;
+    }
+    .score span {
+      font-weight: 700;
+      color: #d0e4ff;
+      font-size: 1.2rem;
+    }
+    .score span.num {
+      color: #facc15;
+      margin: 0 4px;
+    }
+    .turn-indicator {
+      font-weight: 600;
+      color: #8ab4ff;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .turn-dot {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #facc15;
+      box-shadow: 0 0 20px #facc15aa;
+      transition: 0.2s;
+    }
+
+    /* Grid */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      aspect-ratio: 1/1;
+      margin-bottom: 16px;
+      background: #0b0e16;
+      padding: 12px;
+      border-radius: 28px;
+      border: 1px solid #1f2a4a;
+    }
+    .cell {
+      background: #111724;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      font-weight: 700;
+      color: #eaf4ff;
+      cursor: pointer;
+      transition: 0.15s ease;
+      box-shadow: inset 0 0 15px #00000055;
+      border: 1px solid #1f2a4a;
+      aspect-ratio: 1/1;
+      text-shadow: 0 0 30px currentColor;
+      position: relative;
+    }
+    .cell:active {
+      transform: scale(0.94);
+    }
+    .cell.x {
+      color: #7fc9ff;
+      text-shadow: 0 0 40px #4f7affaa;
+    }
+    .cell.o {
+      color: #facc15;
+      text-shadow: 0 0 40px #facc15aa;
+    }
+    .cell.win-highlight {
+      background: #2a3a6a;
+      border-color: #facc15;
+      box-shadow: 0 0 40px #facc1566;
+      transform: scale(1.02);
+    }
+    .cell:not(.taken):hover {
+      background: #1a223a;
+    }
+
+    /* Msg & Reset */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .msg {
+      color: #88aadd;
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 40px;
+      background: #0b0e16;
+      border: 1px solid #2a3a5a;
+    }
+    .btn-reset {
+      background: linear-gradient(135deg, #4f7aff, #7c5cfc);
+      border: none;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px #4f7aff66;
+      transition: 0.2s;
+      border: 1px solid #7fc9ff55;
+    }
+    .btn-reset:active {
+      transform: scale(0.94);
+    }
+
+    /* Confetti Container */
+    #confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+      overflow: hidden;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 440px) {
+      .cell {
+        font-size: 3.2rem;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      .container {
+        padding: 16px 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>✨ TIC–TAC</h1>
+      <div class="controls">
+        <button id="diffEasy" class="active">Easy</button>
+        <button id="diffHard">Hard</button>
+        <button id="muteBtn">🔊</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar">
+      <div class="score">
+        <span>You <span class="num" id="playerScore">0</span></span>
+        <span style="margin:0 4px;color:#445;">|</span>
+        <span>AI <span class="num" id="aiScore">0</span></span>
+      </div>
+      <div class="turn-indicator">
+        <span id="turnText">Your turn</span>
+        <span class="turn-dot" id="turnDot"></span>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div class="board" id="board">
+      <div class="cell" data-index="0"></div>
+      <div class="cell" data-index="1"></div>
+      <div class="cell" data-index="2"></div>
+      <div class="cell" data-index="3"></div>
+      <div class="cell" data-index="4"></div>
+      <div class="cell" data-index="5"></div>
+      <div class="cell" data-index="6"></div>
+      <div class="cell" data-index="7"></div>
+      <div class="cell" data-index="8"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="msg" id="statusMsg">⭐ Tap a square to start</div>
+      <button class="btn-reset" id="resetBtn">↻ New Game</button>
+    </div>
+  </div>
+
+  <div id="confetti-container"></div>
+
+  <script>
+    // ============================================================
+    // 🎵 AUDIO ENGINE (Auto-playing background music + SFX)
+    // ============================================================
+    let audioCtx = null;
+    let isMuted = false;
+    let musicNodes = [];
+    let musicInterval = null;
+
+    function initAudio() {
+      if (audioCtx) return;
+      try {
+        audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+        startBackgroundMusic();
+      } catch (_) { /* no audio */ }
+    }
+
+    // Play a tone
+    function playTone(freq, duration, type = 'sine', vol = 0.08) {
+      if (!audioCtx || isMuted) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+        return { osc, gain };
+      } catch (_) { return null; }
+    }
+
+    // SFX
+    function sfxPlace() { playTone(600, 0.08, 'square', 0.05); }
+
+    function sfxWin() {
+      playTone(523, 0.15, 'sine', 0.1);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.1), 120);
+      setTimeout(() => playTone(784, 0.25, 'sine', 0.12), 240);
+    }
+
+    function sfxLose() {
+      playTone(440, 0.2, 'sawtooth', 0.08);
+      setTimeout(() => playTone(349, 0.3, 'sawtooth', 0.08), 180);
+    }
+
+    function sfxDraw() { playTone(500, 0.1, 'triangle', 0.06);
+      setTimeout(() => playTone(400, 0.1, 'triangle', 0.06), 100); }
+
+    // Background Music (looping arpeggio + drum)
+    function startBackgroundMusic() {
+      if (musicInterval) return;
+      let beat = 0;
+      const bpm = 280; // fast 8-bit feel
+      const intervalMs = 60000 / bpm / 4; // 16th notes
+
+      musicInterval = setInterval(() => {
+        if (!audioCtx || isMuted) return;
+        const now = audioCtx.currentTime;
+        // Chord progression: C - Am - F - G (arpeggio)
+        const chords = [
+          [261.63, 329.63, 392.00, 523.25], // C
+          [220.00, 277.18, 349.23, 440.00], // Am
+          [174.61, 220.00, 261.63, 349.23], // F
+          [196.00, 246.94, 293.66, 392.00] // G
+        ];
+        const chordIndex = Math.floor(beat / 8) % chords.length;
+        const notes = chords[chordIndex];
+        const noteIndex = beat % 4;
+
+        // Melody (sine)
+        if (noteIndex % 2 === 0) {
+          playTone(notes[noteIndex], 0.12, 'sine', 0.06);
+        }
+        // Bass drum (kick) on beat 0 and 8
+        if (beat % 8 === 0) {
+          playTone(50, 0.1, 'square', 0.15);
+          playTone(80, 0.05, 'sine', 0.1);
+        }
+        // Snare on beat 4 and 12
+        if (beat % 8 === 4) {
+          playTone(180, 0.06, 'sawtooth', 0.06);
+          // white noise approximation via many high freqs
+          for (let i = 0; i < 3; i++) {
+            setTimeout(() => playTone(2000 + Math.random() * 3000, 0.04, 'square', 0.02), i * 5);
+          }
+        }
+        // Hi-hat on every other beat
+        if (beat % 2 === 0) {
+          playTone(8000, 0.02, 'square', 0.02);
+        }
+
+        beat++;
+      }, intervalMs);
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+    }
+
+    // ============================================================
+    // 🎮 GAME LOGIC
+    // ============================================================
+    let board = Array(9).fill(null);
+    let currentPlayer = 'X'; // X = human, O = AI
+    let gameActive = true;
+    let difficulty = 'easy'; // 'easy' or 'hard'
+    let scores = { player: 0, ai: 0 };
+    let winCombo = null;
+
+    const cells = document.querySelectorAll('.cell');
+    const statusMsg = document.getElementById('statusMsg');
+    const turnText = document.getElementById('turnText');
+    const turnDot = document.getElementById('turnDot');
+    const playerScoreEl = document.getElementById('playerScore');
+    const aiScoreEl = document.getElementById('aiScore');
+    const resetBtn = document.getElementById('resetBtn');
+    const diffEasy = document.getElementById('diffEasy');
+    const diffHard = document.getElementById('diffHard');
+
+    const winPatterns = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6]
+    ];
+
+    function updateUI() {
+      cells.forEach((cell, i) => {
+        cell.textContent = board[i] || '';
+        cell.className = 'cell' + (board[i] ? ' taken ' + board[i].toLowerCase() : '');
+      });
+      playerScoreEl.textContent = scores.player;
+      aiScoreEl.textContent = scores.ai;
+
+      if (!gameActive) {
+        turnText.textContent = 'Game Over';
+        turnDot.style.background = '#888';
+        turnDot.style.boxShadow = 'none';
+        return;
+      }
+      if (currentPlayer === 'X') {
+        turnText.textContent = 'Your turn';
+        turnDot.style.background = '#7fc9ff';
+        turnDot.style.boxShadow = '0 0 20px #4f7affaa';
+      } else {
+        turnText.textContent = 'AI thinking...';
+        turnDot.style.background = '#facc15';
+        turnDot.style.boxShadow = '0 0 20px #facc15aa';
+      }
+    }
+
+    function checkWinner() {
+      for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return { winner: board[a], combo: pattern };
+        }
+      }
+      if (board.every(cell => cell !== null)) return { winner: 'draw', combo: null };
+      return null;
+    }
+
+    function endGame(result) {
+      gameActive = false;
+      if (result.winner === 'X') {
+        scores.player++;
+        statusMsg.textContent = '🎉 You Win!';
+        sfxWin();
+        spawnConfetti(30);
+        if (result.combo) highlightWin(result.combo);
+      } else if (result.winner === 'O') {
+        scores.ai++;
+        statusMsg.textContent = '🤖 AI Wins!';
+        sfxLose();
+        if (result.combo) highlightWin(result.combo);
+      } else {
+        statusMsg.textContent = '🤝 Draw!';
+        sfxDraw();
+      }
+      updateUI();
+    }
+
+    function highlightWin(combo) {
+      combo.forEach(i => cells[i].classList.add('win-highlight'));
+    }
+
+    function makeMove(index, player) {
+      if (!gameActive || board[index] !== null) return false;
+      board[index] = player;
+      sfxPlace();
+      const result = checkWinner();
+      if (result) {
+        endGame(result);
+        return true;
+      }
+      currentPlayer = (currentPlayer === 'X' ? 'O' : 'X');
+      updateUI();
+      return true;
+    }
+
+    // --- AI ---
+    function getEmptyCells() {
+      return board.map((v, i) => v === null ? i : null).filter(v => v !== null);
+    }
+
+    function minimax(boardArr, depth, isMaximizing) {
+      const result = checkWinner();
+      if (result) {
+        if (result.winner === 'O') return 10 - depth;
+        if (result.winner === 'X') return depth - 10;
+        return 0;
+      }
+      if (isMaximizing) {
+        let best = -Infinity;
+        for (let i of getEmptyCells()) {
+          boardArr[i] = 'O';
+          const val = minimax(boardArr, depth + 1, false);
+          boardArr[i] = null;
+          best = Math.max(best, val);
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (let i of getEmptyCells()) {
+          boardArr[i] = 'X';
+          const val = minimax(boardArr, depth + 1, true);
+          boardArr[i] = null;
+          best = Math.min(best, val);
+        }
+        return best;
+      }
+    }
+
+    function aiMove() {
+      if (!gameActive || currentPlayer !== 'O') return;
+      const empty = getEmptyCells();
+      if (empty.length === 0) return;
+
+      let move = null;
+      if (difficulty === 'easy') {
+        // Random
+        move = empty[Math.floor(Math.random() * empty.length)];
+      } else {
+        // Hard (minimax)
+        let bestScore = -Infinity;
+        for (let i of empty) {
+          board[i] = 'O';
+          const score = minimax(board, 0, false);
+          board[i] = null;
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+        if (move === null) move = empty[0];
+      }
+      if (move !== null) {
+        // Simulate thinking delay
+        setTimeout(() => {
+          makeMove(move, 'O');
+          // If game still active, switch to player
+          if (gameActive) {
+            currentPlayer = 'X';
+            updateUI();
+          }
+        }, 180);
+      }
+    }
+
+    // --- Human move ---
+    function handleCellClick(index) {
+      initAudio(); // start audio on first interaction
+      if (!gameActive || currentPlayer !== 'X') return;
+      if (makeMove(index, 'X')) {
+        // If game still active, AI turn
+        if (gameActive) {
+          currentPlayer = 'O';
+          updateUI();
+          aiMove();
+        }
+      }
+    }
+
+    // --- Reset ---
+    function resetGame() {
+      board = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameActive = true;
+      winCombo = null;
+      cells.forEach(c => c.classList.remove('win-highlight'));
+      statusMsg.textContent = '⭐ New game!';
+      updateUI();
+      // Clear confetti
+      document.getElementById('confetti-container').innerHTML = '';
+      // If AI starts? No, human always starts.
+    }
+
+    // --- Confetti ---
+    function spawnConfetti(count = 40) {
+      const container = document.getElementById('confetti-container');
+      const colors = ['#facc15', '#7fc9ff', '#a78bfa', '#ff6b8a', '#4ade80', '#fb923c'];
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        const size = 6 + Math.random() * 10;
+        const x = Math.random() * window.innerWidth;
+        const y = -20 - Math.random() * 40;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const angle = Math.random() * 2 * Math.PI;
+        const speed = 4 + Math.random() * 8;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed + 2;
+        el.style.cssText = `
+            left:${x}px; top:${y}px; width:${size}px; height:${size * 0.6}px;
+            background:${color}; border-radius:${Math.random()>0.5?'50%':'2px'};
+            transform:rotate(${Math.random()*360}deg);
+          `;
+        container.appendChild(el);
+        // Animate with JS
+        let frame = 0;
+        let posX = x,
+          posY = y;
+        const gravity = 0.12;
+        const drag = 0.99;
+        let velX = vx,
+          velY = vy;
+        const maxLife = 120 + Math.random() * 60;
+        const interval = setInterval(() => {
+          frame++;
+          velX *= drag;
+          velY *= drag;
+          velY += gravity;
+          posX += velX;
+          posY += velY;
+          el.style.left = posX + 'px';
+          el.style.top = posY + 'px';
+          el.style.opacity = 1 - (frame / maxLife);
+          el.style.transform = `rotate(${frame * 5}deg) scale(${1 - frame/maxLife * 0.5})`;
+          if (frame > maxLife || posY > window.innerHeight + 50) {
+            clearInterval(interval);
+            el.remove();
+          }
+        }, 16);
+      }
+      // cleanup after 5s
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 6000);
+    }
+
+    // ============================================================
+    // 🖱️ EVENT BINDING
+    // ============================================================
+    cells.forEach(cell => {
+      cell.addEventListener('click', () => {
+        const idx = parseInt(cell.dataset.index);
+        handleCellClick(idx);
+      });
+      cell.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const idx = parseInt(cell.dataset.index);
+        handleCellClick(idx);
+      });
+    });
+
+    resetBtn.addEventListener('click', resetGame);
+
+    diffEasy.addEventListener('click', () => {
+      difficulty = 'easy';
+      diffEasy.classList.add('active');
+      diffHard.classList.remove('active');
+      resetGame();
+    });
+    diffHard.addEventListener('click', () => {
+      difficulty = 'hard';
+      diffHard.classList.add('active');
+      diffEasy.classList.remove('active');
+      resetGame();
+    });
+
+    document.getElementById('muteBtn').addEventListener('click', toggleMute);
+
+    // Start audio on any user interaction (required for auto-play)
+    document.addEventListener('click', initAudio, { once: true });
+    document.addEventListener('touchstart', initAudio, { once: true });
+
+    // Init UI
+    resetGame();
+
+    console.log('✨ Neon Tic-Tac-Toe loaded! Music auto-plays after first tap.');
+  </script>
+
+</body>
+</html>
